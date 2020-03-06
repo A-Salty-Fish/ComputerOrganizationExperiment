@@ -7,7 +7,7 @@ module EXT( Imm16, EXTOp, Imm32 );
    
    reg [31:0] Imm32;
     
-   always @(*) begin
+   always @(Imm16 or EXTOp) begin
       case (EXTOp)
          `EXT_ZERO:    Imm32 = {16'd0, Imm16};
          `EXT_SIGNED:  Imm32 = {{16{Imm16[15]}}, Imm16};

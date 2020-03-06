@@ -10,9 +10,38 @@ module alu (A, B, ALUOp, C, Zero);
        
    always @( A or B or ALUOp ) begin
       case ( ALUOp )
-         `ALUOp_ADDU: C = A + B;
-         `ALUOp_SUBU: C = A - B;
-       
+		`ALUOp_NOP : C = A;
+		`ALUOp_ADDU: C = A + B;
+		`ALUOp_ADD : C = A + B;
+		`ALUOp_SUBU: C = A - B;
+		`ALUOp_SUB : C = A + ~B + 1;
+		`ALUOp_AND : C = A & B;
+		`ALUOp_OR  : C = A | B;
+		`ALUOp_NOR : C =~(A|B);
+		`ALUOp_XOR : C = (A^B);
+		`ALUOp_SLT : begin
+		if ( A < B ) begin
+			C = 1;
+			end
+		end
+		`ALUOp_SLTU: begin
+		if ( A < B ) begin
+			C = 1;
+			end
+		end
+		`ALUOp_SLL : C = A << B;
+		`ALUOp_SRL : C = A >> B;
+		`ALUOp_SRA : begin
+		C = A >> B 
+		if ( A[31] == 1 ) begin
+			C = {B{1},C[31-B,0]}
+			end
+		//`ALUOp_EQL
+		//`ALUOp_BNE
+		//`ALUOp_GT0
+		//`ALUOp_GE0
+		//`ALUOp_LT0
+		//`ALUOp_LE0
          default:   ;
       endcase
    end // end always;
