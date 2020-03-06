@@ -20,7 +20,7 @@ module alu (A, B, ALUOp, C, Zero);
 		`ALUOp_NOR : C =~(A|B);
 		`ALUOp_XOR : C = (A^B);
 		`ALUOp_SLT : begin
-		if ( (A + ~B + 1)[31] == 1 )
+		if ( (A + (~B) + 1) >> 31 == 1 )
 			C = 1;
 		else
 			C = 0;

@@ -26,6 +26,8 @@ module Ctrl(jump,RegDst,Branch,MemR,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,
 	assign RegW = (OpCode[2]&&OpCode[3])||(!OpCode[2]&&!OpCode[3]);
 	assign Alusrc = OpCode[0]||OpCode[1];
 	assign ExtOp = OpCode[2]&&OpCode[3];
+	
+	
 	always@(OpCode or funct)
 	begin
 		Aluctrl[1] = ExtOp;

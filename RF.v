@@ -1,4 +1,4 @@
-`include "global_def.v"
+// `include "global_def.v"
 module RF( A1, A2, A3, WD, clk, RFWr, RD1, RD2 );
     
    input  [4:0]  A1, A2, A3;

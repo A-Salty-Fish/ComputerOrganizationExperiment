@@ -1,6 +1,6 @@
 module im_4k( addr, dout );
     
-    input [11:2] addr;
+    input [9:0] addr;
     input [31:0] dout;
     
     reg [31:0] imem[1023:0];
