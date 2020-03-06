@@ -31,11 +31,7 @@ module alu (A, B, ALUOp, C, Zero);
 		end
 		`ALUOp_SLL : C = A << B;
 		`ALUOp_SRL : C = A >> B;
-		`ALUOp_SRA : begin
-		C = A >> B 
-		if ( A[31] == 1 ) begin
-			C = {B{1},C[31-B,0]}
-			end
+		`ALUOp_SRA : C[31:0] =  ( { {31{A}}, 1'b0 } << (~B[4:0]) ) | ( A >> B[4:0] ) ;
 		//`ALUOp_EQL
 		//`ALUOp_BNE
 		//`ALUOp_GT0
