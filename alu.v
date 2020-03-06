@@ -20,14 +20,16 @@ module alu (A, B, ALUOp, C, Zero);
 		`ALUOp_NOR : C =~(A|B);
 		`ALUOp_XOR : C = (A^B);
 		`ALUOp_SLT : begin
-		if ( A < B ) begin
+		if ( (A + ~B + 1)[31] == 1 )
 			C = 1;
-			end
+		else
+			C = 0;
 		end
 		`ALUOp_SLTU: begin
-		if ( A < B ) begin
+		if ( A < B ) 
 			C = 1;
-			end
+		else
+			C = 0;
 		end
 		`ALUOp_SLL : C = A << B;
 		`ALUOp_SRL : C = A >> B;
