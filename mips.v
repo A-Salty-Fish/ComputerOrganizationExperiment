@@ -27,7 +27,7 @@ module mips( clk, rst );
 
 
 //IM	
-	wire [4:0]  imAdr;
+	wire [9:0]  imAdr;
 	wire [31:0] imOut;
 	
 //GPR
@@ -43,7 +43,7 @@ module mips( clk, rst );
 	
 //DMem
 
-	wire [4:0]  dmDataAdr;
+	wire [9:0]  dmDataAdr;
 	wire [31:0] dmDataOut;
 	
 //Ctrl
