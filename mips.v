@@ -70,8 +70,8 @@ module mips( clk, rst );
 	
 	
 //PC块实例化	
-    PcUnit PcUnit(.PC(pcOut),.PcReSet(Reset),.PcSel(pcSel),.Clk(Clk),.Adress(extDataOut));
-	
+    PcUnit PcUnit(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Adress(extDataOut));
+	// PC PC( .clk(clk), .rst(Reset), PCWr, NPC, PC );
 	assign imAdr = pcOut[11:2];
 //指令寄存器实例化	
 	im_4k im_4k(.dout(imOut),.addr(imAdr));

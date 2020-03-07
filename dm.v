@@ -1,6 +1,6 @@
 module dm_4k( addr, din, DMWr, clk, dout );
    
-   input  [11:2] addr;
+   input  [9:0] addr;
    input  [31:0] din;
    input         DMWr;
    input         clk;
