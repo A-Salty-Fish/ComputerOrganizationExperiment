@@ -13,7 +13,7 @@ module Ctrl(jump,RegDst,Branch,MemR,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,
 	output MemW;						//写数据存储器
 	output RegW;						//寄存器堆写入数据
 	output Alusrc;						//运算器操作数选择
-	output ExtOp;						//位扩展/符号扩展选择
+	output [1:0] ExtOp;						//位扩展/符号扩展选择
 	output reg[1:0] Aluctrl;						//Alu运算选择
 	
 	
