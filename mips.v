@@ -1,3 +1,5 @@
+`include "instruction_def.v"
+`include "ctrl_encode_def.v"
 module mips( clk, rst );
    input   clk;
    input   rst;
@@ -12,7 +14,6 @@ module mips( clk, rst );
    // wire 		     BSel;
    // wire 		     Zero;
    
-   
    // assign Op = instr[31:26];
    // assign Funct = instr[5:0];
    // assign rs = instr[25:21];
@@ -23,93 +24,92 @@ module mips( clk, rst );
    	
 //PC	
 
-	wire [31:0] pcOut;
-
+	wire [31:0] pcOut;//PC输出
 
 //IM	
-	wire [9:0]  imAdr;
-	wire [31:0] imOut;
+	wire [11:2] imAdr;//指令地址
+	wire [31:0] imOut;//指令
 	
-//GPR
-	wire [4:0] gprWeSel,gprReSel1,gprReSel2;
-	wire [31:0] gprDataIn;
-	
-	wire [31:0] gprDataOut1,gprDataOut2;
+//RF 
+
+	wire [4:0] rd,rs,rt;//读写寄存器输入
+	wire [31:0] RfDataIn;//寄存器输入
+	wire [31:0] RfDataOut1,RfDataOut2;//寄存器输出
 	
 //Extender
 
-	wire [15:0] extDataIn;
-	wire [31:0] extDataOut;
+	wire [15:0] extDataIn;//扩展器输入
+	wire [31:0] extDataOut;//扩展器输出
 	
 //DMem
 
-	wire [9:0]  dmDataAdr;
-	wire [31:0] dmDataOut;
+	wire [11:2] dmDataAdr;//数据地址
+	wire [31:0] dmDataOut;//数据输出
+	wire 		     MemW;//写使能
 	
 //Ctrl
 	
 	wire [5:0]		op;
 	wire [5:0]		funct;
 	wire 		jump;						//指令跳转
-	wire 		RegDst;						
+	wire 		RegDst;						//rt或rd
 	wire 		Branch;						//分支
-	wire 		MemR;						//读存储器
+	// wire 		MemR;						//读存储器
 	wire 		Mem2R;						//数据存储器到寄存器堆
-	wire 		MemW;						//写数据存储器
 	wire 		RegW;						//寄存器堆写入数据
 	wire		Alusrc;						//运算器操作数选择
 	wire [1:0]		ExtOp;						//位扩展/符号扩展选择
 	wire [1:0]  Aluctrl;						//Alu运算选择
 
 //Alu
-	wire [31:0] aluDataIn2;
-	wire [31:0]	aluDataOut;
+	wire [31:0] aluDataIn2;//ALU输入 来自扩展数或寄存器
+	wire [31:0]	aluDataOut;//ALU输出
 	wire 		zero;
 	
-	assign pcSel = ((Branch&&zero)==1)?1:0;
+	assign pcSel = ((Branch&&zero)==1) ? 1 : 0;//分支且运算结果为0
 	
 	
 //PC块实例化	
-    PcUnit PcUnit(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Adress(extDataOut));
+    PcUnit U_PC(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Adress(extDataOut));
 	// PC PC( .clk(clk), .rst(Reset), PCWr, NPC, PC );
 	assign imAdr = pcOut[11:2];
-//指令寄存器实例化	
-	im_4k im_4k(.dout(imOut),.addr(imAdr));
 	
+//指令寄存器实例化	
+	im_4k U_IM(.dout(imOut),.addr(imAdr));
+	
+//拆分指令
 	assign op = imOut[31:26];
 	assign funct = imOut[5:0];
-	assign gprReSel1 = imOut[25:21];
-	assign gprReSel2 = imOut[20:16];
-	
-	
-	assign gprWeSel = (RegDst==1)?imOut[20:16]:imOut[15:11];
-
+	assign rs = imOut[25:21];
+	assign rt = imOut[20:16];
+	assign rd = (RegDst==1)?imOut[20:16]:imOut[15:11]; 
 	assign extDataIn = imOut[15:0];
+	
 		                
 //寄存器堆实例化
-	RF RF(.RD1(gprDataOut1),.RD2(gprDataOut2),.clk(Clk),.WD(gprDataIn)
-			  ,.RFWr(RegW),.A3(gprWeSel),.A1(gprReSel1),.A2(gprReSel2));
+	RF U_RF(.RD1(RfDataOut1),.RD2(RfDataOut2),.clk(clk),.WD(RfDataIn)
+			  ,.RFWr(RegW),.A3(rd),.A1(rs),.A2(rt));
 //控制器实例化	
-	Ctrl Ctrl(.jump(jump),.RegDst(RegDst),.Branch(Branch),.MemR(MemR),.Mem2R(Mem2R)
+	Ctrl U_Ctrl(.jump(jump),.RegDst(RegDst),.Branch(Branch),.Mem2R(Mem2R)
 				,.MemW(MemW),.RegW(RegW),.Alusrc(Alusrc),.ExtOp(ExtOp),.Aluctrl(Aluctrl)
 				,.OpCode(op),.funct(funct));
 				
 //扩展器实例化	
-	EXT EXT(.Imm32(extDataOut),.Imm16(extDataIn),.EXTOp(ExtOp));
+	EXT U_EXT(.Imm32(extDataOut),.Imm16(extDataIn),.EXTOp(ExtOp));
 	
-	assign aluDataIn2 = (Alusrc==1)?extDataOut:gprDataOut2;
+	assign aluDataIn2 = (Alusrc==1)?extDataOut:RfDataOut2;
 	
 //ALU实例化	
-	alu alu(.C(aluDataOut),.Zero(zero),.A(gprDataOut1),.B(aluDataIn2),.ALUOp(Aluctrl));
+	alu alu(.C(aluDataOut),.Zero(zero),.A(RfDataOut1),.B(aluDataIn2),.ALUOp(Aluctrl));
 	
 	
-	assign gprDataIn = (Mem2R==1)?dmDataOut:aluDataOut;
+	assign RfDataIn = (Mem2R==1)?dmDataOut:aluDataOut;
 	
 	
 //DM实例化
 
 	assign dmDataAdr = aluDataOut[9:0];
-	dm_4k dm_4k(.dout(dmDataOut),.addr(dmDataAdr),.din(gprDataOut2),.DMWr(MemW),.clk(Clk));
+	dm_4k U_dm(.dout(dmDataOut),.addr(dmDataAdr),.din(RfDataOut2),.DMWr(MemW),.clk(clk));
 endmodule
    // PC U_PC (
       // .clk(clk), .rst(rst), .PCWr(PCWr), .NPC(NPC), .PC(PC)

@@ -7,8 +7,8 @@
    );
     
    initial begin
-      $readmemh( "Test_6_Instr.txt" , U_MIPS.im_4k.imem ) ;
-      // $monitor("PC = 0x%8X, IR = 0x%8X", U_MIPS.PcUnit.PC, U_MIPS.instr ); 
+      $readmemh( "Test_6_Instr.txt" , U_MIPS.U_IM.imem ) ;
+      $monitor("PC = 0x%8X, IR = 0x%8X", U_MIPS.U_PC.PC, U_MIPS.imOut ); 
       clk = 1 ;
       rst = 0 ;
       #5 ;
