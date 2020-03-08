@@ -1,15 +1,16 @@
 
-module PcUnit(PC,PcReSet,PcSel,Clk,Adress);
+module PcUnit(PC,PcReSet,PcSel,Clk,Address);
 
 	input   PcReSet;
 	input   PcSel;
 	input   Clk;
-	input   [31:0] Adress;
+	input   [31:0] Address;
 	
 	output reg[31:0] PC;
 	
 	integer i;
 	reg [31:0] temp;
+	reg [31:0] temp2;
 	always@(posedge Clk or posedge PcReSet)
 	begin
 		if(PcReSet == 1)
@@ -19,11 +20,12 @@ module PcUnit(PC,PcReSet,PcSel,Clk,Adress);
 	  if(PcSel == 1)
 				begin
 					for(i=0;i<30;i=i+1)
-						temp[31-i] = Adress[29-i];
+						temp[31-i] = Address[29-i];
 					temp[0] = 0;
 					temp[1] = 0;
-					
-					PC = PC+temp;
+					temp2 = PC;
+					PC = PC + temp;
+					$display("Branch:Address=%8X temp=%8X curPC=%8X lastPC=%8X",Address,temp,PC,temp2);
 				end
 	end
 endmodule

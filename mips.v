@@ -8,7 +8,7 @@ module mips( clk, rst );
    // wire 		     DMWr;
    // wire 		     PCWr;
    // wire 		     IRWr;
-   // wire [1:0]  EXTOp;
+   // wire [1:0]  ExtOp;
    // wire [1:0]  ALUOp;
    // wire [1:0]  NPCOp;
    // wire 		     BSel;
@@ -27,7 +27,7 @@ module mips( clk, rst );
 	wire [31:0] pcOut;//PC输出
 
 //IM	
-	wire [11:2] imAdr;//指令地址
+	wire [9:0] imAdr;//指令地址
 	wire [31:0] imOut;//指令
 	
 //RF 
@@ -43,7 +43,7 @@ module mips( clk, rst );
 	
 //DMem
 
-	wire [11:2] dmDataAdr;//数据地址
+	wire [9:0] dmDataAdr;//数据地址
 	wire [31:0] dmDataOut;//数据输出
 	wire 		     MemW;//写使能
 	
@@ -70,7 +70,7 @@ module mips( clk, rst );
 	
 	
 //PC块实例化	
-    PcUnit U_PC(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Adress(extDataOut));
+    PcUnit U_PC(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Address(extDataOut));
 	// PC PC( .clk(clk), .rst(Reset), PCWr, NPC, PC );
 	assign imAdr = pcOut[11:2];
 	
@@ -95,7 +95,7 @@ module mips( clk, rst );
 				,.OpCode(op),.funct(funct));
 				
 //扩展器实例化	
-	EXT U_EXT(.Imm32(extDataOut),.Imm16(extDataIn),.EXTOp(ExtOp));
+	EXT U_EXT(.Imm32(extDataOut),.Imm16(extDataIn),.ExtOp(ExtOp));
 	
 	assign aluDataIn2 = (Alusrc==1)?extDataOut:RfDataOut2;
 	
@@ -108,7 +108,7 @@ module mips( clk, rst );
 	
 //DM实例化
 
-	assign dmDataAdr = aluDataOut[9:0];
+	assign dmDataAdr = aluDataOut[11:2];
 	dm_4k U_dm(.dout(dmDataOut),.addr(dmDataAdr),.din(RfDataOut2),.DMWr(MemW),.clk(clk));
 endmodule
    // PC U_PC (

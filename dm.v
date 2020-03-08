@@ -1,6 +1,6 @@
 module dm_4k( addr, din, DMWr, clk, dout );
    
-   input  [11:2] addr;//地址
+   input  [9:0] addr;//地址
    input  [31:0] din;//数据输入端
    input         DMWr;//写使能端
    input         clk;//时钟
