@@ -10,9 +10,10 @@ module alu (A, B, ALUOp, C, Zero);
        
    always @( A or B or ALUOp ) begin
       case ( ALUOp )
-		 2'b00 : C = A + B;
-         2'b01 : C = A - B;
-         default: C = A | B;
+		 2'b00 : C = A | B;
+         2'b11 : C = A - B;
+		 2'b10 : C = A + B;
+         default: ;
 		// `ALUOp_NOP : C = A;
 		// `ALUOp_ADDU: C = A + B;
 		// `ALUOp_ADD : C = A + B;
@@ -45,7 +46,7 @@ module alu (A, B, ALUOp, C, Zero);
 		//`ALUOp_LE0
          // default:   ;
       endcase
-	  $display("ALU: A=%8X B=%8X C=%8X",A,B,C);
+	  $display("ALU: A=%8X B=%8X C=%8X ALUOp=%2b",A,B,C,ALUOp);
    end // end always;
    
    assign Zero = (A == B) ? 1 : 0;

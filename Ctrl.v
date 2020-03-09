@@ -25,7 +25,7 @@ module Ctrl(jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,funct
 	assign MemW = OpCode[1]&&OpCode[0]&&OpCode[3]&&OpCode[5];
 	assign RegW = (OpCode[2]&&OpCode[3])||(!OpCode[2]&&!OpCode[3]);
 	assign Alusrc = OpCode[0]||OpCode[1];
-	assign ExtOp = {1'b0, OpCode[2]&&OpCode[3]};
+	assign ExtOp = {1'b0, !(OpCode[2]&&OpCode[3])};//修改扩展信号
 	
 	
 	always@(OpCode or funct)
