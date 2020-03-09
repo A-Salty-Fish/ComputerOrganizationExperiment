@@ -1,14 +1,20 @@
-module dm_4k( addr, din, DMWr, clk, dout );
+module dm_4k( addr, din, DMWr, clk, dout,rst );
    
    input  [9:0] addr;//地址
    input  [31:0] din;//数据输入端
    input         DMWr;//写使能端
+   input         rst;//清零端
    input         clk;//时钟
    output [31:0] dout;//数据输出端
      
    reg [31:0] dmem[1023:0];//存储器堆
-   
-   always @(posedge clk) begin
+	integer i;
+   always @(posedge clk or posedge rst) begin
+		if (rst) begin
+			   
+			for (i=0;i<1024;i=i+1)
+				dmem[i] <= 32'h0000_0000;
+				end
       if (DMWr)
          dmem[addr] <= din;
  // end always

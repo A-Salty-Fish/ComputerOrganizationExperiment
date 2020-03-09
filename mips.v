@@ -109,7 +109,7 @@ module mips( clk, rst );
 //DMÊµÀý»¯
 
 	assign dmDataAdr = aluDataOut[11:2];
-	dm_4k U_dm(.dout(dmDataOut),.addr(dmDataAdr),.din(RfDataOut2),.DMWr(MemW),.clk(clk));
+	dm_4k U_dm(.dout(dmDataOut),.addr(dmDataAdr),.din(RfDataOut2),.DMWr(MemW),.clk(clk),.rst(rst));
 endmodule
    // PC U_PC (
       // .clk(clk), .rst(rst), .PCWr(PCWr), .NPC(NPC), .PC(PC)
