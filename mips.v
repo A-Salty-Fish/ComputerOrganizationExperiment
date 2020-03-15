@@ -23,7 +23,7 @@ module mips( clk, rst );
 //PC	
 
 	wire [31:0] pcOut;//PC输出
-		wire [2:0] pcSel;//跳转和分支选择
+		wire [1:0] pcSel;//跳转和分支选择
 		wire [31:0] pcAddr;//PC跳转
 		
 //IM	
@@ -52,7 +52,7 @@ module mips( clk, rst );
 	
 	wire [5:0]		op;
 	wire [5:0]		funct;
-	wire 		jump;						//指令跳转
+	wire [1:0]	jump;						//指令跳转
 	wire 		RegDst;						//rt或rd
 	wire [1:0]		Branch;						//分支
 	// wire 		MemR;						//读存储器
@@ -69,11 +69,10 @@ module mips( clk, rst );
 	wire [31:0]	aluDataOut;//ALU输出
 	wire 		zero;
 	
-	assign pcSel[2] = jump;
-	assign pcSel[1] = 0;
+	assign pcSel[1] = jump[0]||jump[1];
 	assign pcSel[0] = ((Branch[0]&&zero)||(Branch[1]&&!zero)) ? 1 : 0;//beq与bnq分支
 	
-	assign pcAddr = jump? {4'b0,imOut[25:0],2'b0} : extDataOut;
+	assign pcAddr = (jump==2'b11) ? RfDataOut1 : (jump==2'b01 || jump==2'b10) ? {4'b0,imOut[25:0],2'b0} : extDataOut;
 	
 	
 //PC块实例化	
@@ -89,7 +88,7 @@ module mips( clk, rst );
 	assign funct = imOut[5:0];
 	assign rs = imOut[25:21];
 	assign rt = imOut[20:16];
-	assign rd = (RegDst==0)?imOut[20:16]:imOut[15:11]; 
+	assign rd = (jump==2'b10)? 5'b11111 : (RegDst==0)?imOut[20:16]:imOut[15:11]; 
 	assign extDataIn = (shift==1) ? {{11{1'b0}},shamt} : imOut[15:0];
 	assign shamt = imOut[10:6];
 		                
@@ -111,7 +110,7 @@ module mips( clk, rst );
 	alu alu(.C(aluDataOut),.Zero(zero),.A(aluDataIn1),.B(aluDataIn2),.ALUOp(Aluctrl));
 	
 	
-	assign RfDataIn = (Mem2R==1)?dmDataOut:aluDataOut;
+	assign RfDataIn = (jump==2'b10)? pcOut+3'b100 :  (Mem2R==1)?dmDataOut:aluDataOut;
 	
 	
 //DM实例化
