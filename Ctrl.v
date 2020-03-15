@@ -49,7 +49,7 @@ module Ctrl(jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,funct
 			jump=2'b00;Branch=2'b00;
 			Mem2R=0;MemW=0;
 			RegDst=0;Alusrc=1;shift=0;RegW=1;
-			Aluctrl=5'b000000;ExtOp=`EXT_ZERO;
+			Aluctrl=`ALUOp_OR;ExtOp=`EXT_ZERO;
 		end
 		
 		else if (OpCode==6'b000000&&funct==6'b100100)//and
@@ -68,7 +68,15 @@ module Ctrl(jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,funct
 			Aluctrl=5'b00000;ExtOp=`EXT_ZERO;	
 		end
 		
-		else if (OpCode==6'b000000&&funct==6'b100101)//add
+		else if (OpCode==6'b000000&&funct==6'b100000)//add
+		begin
+			jump=2'b00;Branch=2'b00;
+			Mem2R=0;MemW=0;
+			RegDst=1;Alusrc=0;shift=0;RegW=1;
+			Aluctrl=`ALUOp_ADD;ExtOp=`EXT_ZERO;			
+		end
+		
+		else if (OpCode==6'b000000&&funct==6'b100001)//addu
 		begin
 			jump=2'b00;Branch=2'b00;
 			Mem2R=0;MemW=0;
@@ -82,6 +90,22 @@ module Ctrl(jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,funct
 			Mem2R=0;MemW=0;
 			RegDst=0;Alusrc=1;shift=0;RegW=1;
 			Aluctrl=`ALUOp_ADD;ExtOp=`EXT_SIGNED;
+		end
+		
+		else if (OpCode==6'b000000&&funct==6'b100010)//sub
+		begin
+			jump=2'b00;Branch=2'b00;
+			Mem2R=0;MemW=0;
+			RegDst=1;Alusrc=0;shift=0;RegW=1;
+			Aluctrl=`ALUOp_SUBU;ExtOp=`EXT_ZERO;	
+		end
+		
+		else if (OpCode==6'b000000&&funct==6'b100011)//subu
+		begin
+			jump=2'b00;Branch=2'b00;
+			Mem2R=0;MemW=0;
+			RegDst=1;Alusrc=0;shift=0;RegW=1;
+			Aluctrl=`ALUOp_SUBU;ExtOp=`EXT_ZERO;			
 		end
 		
 		else if (OpCode==6'b001010) //slti
@@ -163,34 +187,33 @@ module Ctrl(jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,ExtOp,Aluctrl,OpCode,funct
 			RegDst=0;Alusrc=1;shift=0;RegW=1;
 			Aluctrl=`ALUOp_ADD;ExtOp=`EXT_SIGNED;
 		end
-
 		
-		else//向后兼容
-		begin
-		 shift = 0;
-		 jump = 0 ;
-		 RegDst = (!OpCode[0])  ; //slti 001010 slt 000000
+		else ;
 		
-		 Branch[0] = (OpCode==6'b000100 ? 1 : 0) ; //beq opcode:000100 funct:000001 !OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&!OpCode[0];
-		 Branch[1] = (OpCode==6'b000101 ? 1 : 0) ; //bne opcode:000101 funct:000001 !OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&OpCode[0];
+		// else//向后兼容
+		// begin
+		 // shift = 0;
+		 // jump = 0 ;
+		 // RegDst = (!OpCode[0])  ; //slti 001010 slt 000000
 		
-		//  MemR = (OpCode[0]&&OpCode[1]&&OpCode[5])&&(!OpCode[3]);
-		 Mem2R = (OpCode[0]&&OpCode[1]&&OpCode[5])&&(!OpCode[3]);
-		 MemW = OpCode[1]&&OpCode[0]&&OpCode[3]&&OpCode[5];
-		 RegW = (OpCode[2]&&OpCode[3])||(!OpCode[2]&&!OpCode[3]) || (OpCode==6'b001010) ; // slti 001010
-		 Alusrc = (OpCode[0]||OpCode[1])  &&  (!(OpCode==6'b000101));   //!(!OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&OpCode[0]); //添加bne
-		 ExtOp = {OpCode==6'b001111, !(OpCode[2]&&OpCode[3])}; //修改扩展信号 001111 lui !OpCode[5]&&!OpCode[4]&&OpCode[3]&&OpCode[2]&&OpCode[1]&&OpCode[0]
+		 // Branch[0] = (OpCode==6'b000100 ? 1 : 0) ; //beq opcode:000100 funct:000001 !OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&!OpCode[0];
+		 // Branch[1] = (OpCode==6'b000101 ? 1 : 0) ; //bne opcode:000101 funct:000001 !OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&OpCode[0];
 		
-		//funct
-	 	Aluctrl[4]=0;
-		Aluctrl[3]=0;
-		Aluctrl[2] = (funct==6'b111111||funct==6'b101010) ;//slti funct:111111 slt funct:101010 
-		Aluctrl[1] = ExtOp[0];
-		if((OpCode[1]||OpCode[2]) == 0)
-			Aluctrl[0] = funct[1]  &&  !(funct==6'b101010);// +slt 
-		else
-			Aluctrl[0] = !(OpCode[1]||OpCode[0]);
-		end
+		 // Mem2R = (OpCode[0]&&OpCode[1]&&OpCode[5])&&(!OpCode[3]);
+		 // MemW = OpCode[1]&&OpCode[0]&&OpCode[3]&&OpCode[5];
+		 // RegW = (OpCode[2]&&OpCode[3])||(!OpCode[2]&&!OpCode[3]) || (OpCode==6'b001010) ; // slti 001010
+		 // Alusrc = (OpCode[0]||OpCode[1])  &&  (!(OpCode==6'b000101));   //!(!OpCode[5]&&!OpCode[4]&&!OpCode[3]&&OpCode[2]&&!OpCode[1]&&OpCode[0]); //添加bne
+		 // ExtOp = {OpCode==6'b001111, !(OpCode[2]&&OpCode[3])}; //修改扩展信号 001111 lui !OpCode[5]&&!OpCode[4]&&OpCode[3]&&OpCode[2]&&OpCode[1]&&OpCode[0]
+		
+	 	// Aluctrl[4]=0;
+		// Aluctrl[3]=0;
+		// Aluctrl[2] = (funct==6'b111111||funct==6'b101010) ;//slti funct:111111 slt funct:101010 
+		// Aluctrl[1] = ExtOp[0];
+		// if((OpCode[1]||OpCode[2]) == 0)
+			// Aluctrl[0] = funct[1]  &&  !(funct==6'b101010);// +slt 
+		// else
+			// Aluctrl[0] = !(OpCode[1]||OpCode[0]);
+		// end
 		$display("Control::jump:%b RegDst:%b Branch:%3b Mem2R %b MemW:%b RegW:%b Alusrc: %b shift: %b",jump,RegDst,Branch,Mem2R,MemW,RegW,Alusrc,shift);
 	end
 	

@@ -11,9 +11,10 @@ module alu (A, B, ALUOp, C, Zero);
    always @( A or B or ALUOp ) begin
       case ( ALUOp )
 		 5'b00000 : C = A | B;
-         5'b00011 : C = A - B;
+         `ALUOp_SUBU : C = A - B;
 		 `ALUOp_ADD : C = A + B;
 		 `ALUOp_OR : C = A | B;
+		 `ALUOp_SUB : C = A + ~B + 1;
 		 `ALUOp_SLT : begin
 		 if (A[31]==B[31]) C = A < B ? 1 : 0;
 		 else if (A[31]==1) C = 1;
