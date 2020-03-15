@@ -25,10 +25,13 @@ module mips( clk, rst );
 //PC	
 
 	wire [31:0] pcOut;//PC输出
-
+		wire [2:0] pcSel;//跳转和分支选择
+		wire [31:0] pcAddr;//PC跳转
+		
 //IM	
 	wire [9:0] imAdr;//指令地址
 	wire [31:0] imOut;//指令
+
 	
 //RF 
 
@@ -66,12 +69,14 @@ module mips( clk, rst );
 	wire [31:0]	aluDataOut;//ALU输出
 	wire 		zero;
 	
-	assign pcSel = ((Branch[0]&&zero)||(Branch[1]&&!zero)) ? 1 : 0;//beq与bnq分支
-	
+	assign pcSel[2] = jump;
+	assign pcSel[1] = 0;
+	assign pcSel[0] = ((Branch[0]&&zero)||(Branch[1]&&!zero)) ? 1 : 0;//beq与bnq分支
+	assign pcAddr = jump? {4'b0,imOut[25:0],2'b0} : extDataOut;
 	
 	
 //PC块实例化	
-    PcUnit U_PC(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Address(extDataOut));
+    PcUnit U_PC(.PC(pcOut),.PcReSet(rst),.PcSel(pcSel),.Clk(clk),.Address(pcAddr));
 	// PC PC( .clk(clk), .rst(Reset), PCWr, NPC, PC );
 	assign imAdr = pcOut[11:2];
 	
