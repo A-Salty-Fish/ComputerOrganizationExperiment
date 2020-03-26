@@ -72,7 +72,7 @@ module mips( clk, rst );
 	assign pcSel[1] = jump[0]||jump[1];
 	assign pcSel[0] = ((Branch[0]&&zero)||(Branch[1]&&!zero)) ? 1 : 0;//beq与bnq分支
 	
-	assign pcAddr = (jump==2'b11) ? RfDataOut1 : (jump==2'b01 || jump==2'b10) ? {4'b0,imOut[25:0],2'b0} : extDataOut;
+	assign pcAddr = (jump==2'b11) ? RfDataOut1 : (jump==2'b01 || jump==2'b10) ? {pcOut[31:28],imOut[25:0],2'b00} : extDataOut;
 	
 	
 //PC块实例化	
