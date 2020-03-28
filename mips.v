@@ -29,7 +29,8 @@ module mips( clk, rst );
 //IM	
 	wire [9:0] imAdr;//指令地址
 	wire [31:0] imOut;//指令
-
+//IF/ID
+	wire [31:0] instr;
 	
 //RF 
 
@@ -82,15 +83,17 @@ module mips( clk, rst );
 	
 //指令寄存器实例化	
 	im_4k U_IM(.dout(imOut),.addr(imAdr));
-	
+
+//IF/ID流水线寄存器 IF_ID(pcIn,imIn,clk,pcOut,imOut,rst)
+	IF_ID U_IF_ID(.pcIn(pcOut),.imIn(imOut),.clk(clk),.imOut(instr),.rst(rst));
 //拆分指令
-	assign op = imOut[31:26];
-	assign funct = imOut[5:0];
-	assign rs = imOut[25:21];
-	assign rt = imOut[20:16];
-	assign rd = (jump==2'b10)? 5'b11111 : (RegDst==0)?imOut[20:16]:imOut[15:11]; 
-	assign extDataIn = (shift==1) ? {{11{1'b0}},shamt} : imOut[15:0];
-	assign shamt = imOut[10:6];
+	assign op = instr[31:26];
+	assign funct = instr[5:0];
+	assign rs = instr[25:21];
+	assign rt = instr[20:16];
+	assign rd = (jump==2'b10)? 5'b11111 : (RegDst==0)?instr[20:16]:instr[15:11]; 
+	assign extDataIn = (shift==1) ? {{11{1'b0}},shamt} : instr[15:0];
+	assign shamt = instr[10:6];
 		                
 //寄存器堆实例化
 	RF U_RF(.RD1(RfDataOut1),.RD2(RfDataOut2),.clk(clk),.WD(RfDataIn)
