@@ -7,7 +7,7 @@ module mips( clk, rst );
 	wire [31:0] pcOut;//PC输出
 	wire [1:0] pcSel;//跳转和分支选择
 	wire [31:0] pcAddr;//PC跳转
-		
+//流水线相关
 //IM	
 	wire [9:0] imAdr;//指令地址
 	wire [31:0] imOut;//指令
@@ -16,15 +16,18 @@ module mips( clk, rst );
 	wire [31:0] IF_PcOut;
 //ID_EX
 	wire [31:0] ID_RegPcIn;wire [31:0] ID_RegInStr;wire [31:0] ID_RegRegOut1;wire [31:0] ID_RegRegOut2; wire [31:0] ID_RegExtOut;
-	wire [1:0] ID_RegJump;wire [4:0] ID_RegRd;wire [1:0] ID_RegBranch;wire ID_RegMem2R;wire ID_RegMemW;wire ID_RegRegW;
+	wire [1:0] ID_RegJump;wire [4:0] ID_RegRd;wire [4:0] ID_RegRs;wire [4:0] ID_RegRt;wire [1:0] ID_RegBranch;wire ID_RegMem2R;wire ID_RegMemW;wire ID_RegRegW;
 	wire ID_RegAluSrc;wire [1:0] ID_RegExtOp;wire [4:0] ID_RegAluCtrl; wire ID_RegShift;
 //EX_MEM
 	wire [31:0] EX_RegExtPc; wire [31:0] EX_RegAluOut;wire EX_RegZero;wire [31:0] EX_RegRtOut;wire [4:0] EX_RegRd;
 	wire [1:0] EX_RegBranch; wire EX_RegMemW; wire EX_RegRegW; wire EX_RegMem2R;
-	
 //MEW_WB
 wire [9:0] MEM_RegDmAddr; wire [31:0] MEM_RegDmOut;wire [31:0] MEM_RegAluOut;
- wire [4:0] MEM_RegRd; wire MEM_RegRegW;wire MEM_RegMem2R;
+wire [4:0] MEM_RegRd; wire MEM_RegRegW;wire MEM_RegMem2R;
+//旁路
+wire [1:0] FORWARD_Out1;
+wire [1:0] FORWARD_Out2;//旁路选择器输入1和2
+
 //RF 
 
 	wire [4:0] rd,rs,rt;//读写寄存器输入
@@ -92,15 +95,26 @@ wire [9:0] MEM_RegDmAddr; wire [31:0] MEM_RegDmOut;wire [31:0] MEM_RegAluOut;
 				
 //ID\EX实例化
 	ID_EX U_ID_EX(.clk(clk),.rst(rst),.PcIn(IF_PcOut),.Instr(instr),.RegOut1(RfDataOut1),.RegOut2(RfDataOut2),.ExtOut(extDataOut),//输入
-.Jump(jump),.Rd(rd),.Branch(Branch),.Mem2R(Mem2R),.MemW(MemW),.RegW(RegW),.AluSrc(Alusrc),.ExtOp(ExtOp),.AluCtrl(Aluctrl),.Shift(shift),//输入
+.Rd(rd),.Rt(rt),.Rs(rs),.Jump(jump),.Branch(Branch),.Mem2R(Mem2R),.MemW(MemW),.RegW(RegW),.AluSrc(Alusrc),.ExtOp(ExtOp),.AluCtrl(Aluctrl),.Shift(shift),//输入
 .RegPcIn(ID_RegPcIn),.RegInStr(ID_RegInStr),.RegRegOut1(ID_RegRegOut1),.RegRegOut2(ID_RegRegOut2),.RegExtOut(ID_RegExtOut),//输出
-.RegJump(ID_RegJump),.RegRd(ID_RegRd),.RegBranch(ID_RegBranch),.RegMem2R(ID_RegMem2R),.RegMemW(ID_RegMemW),//输出
+.RegRd(ID_RegRd),.RegRt(ID_RegRt),.RegRs(ID_RegRs),.RegJump(ID_RegJump),.RegBranch(ID_RegBranch),.RegMem2R(ID_RegMem2R),.RegMemW(ID_RegMemW),//输出
 .RegRegW(ID_RegRegW),.RegAluSrc(ID_RegAluSrc),.RegExtOp(ID_RegExtOp),.RegAluCtrl(ID_RegAluCtrl),.RegShift(ID_RegShift)//输出
 );
-
+	//流水线 旁路单元
+	FORWARD_UNIT U_FOR_UNIT(.rst(rst),.EX_RegW(EX_RegRegW),.EX_RegRd(EX_RegRd),.ID_RegRs(ID_RegRs),.ID_RegRt(ID_RegRt),
+	.MEM_RegW(MEM_RegRegW),.MEM_RegRd(MEM_RegRd),
+	.FORWARD_Out1(FORWARD_Out1),.FORWARD_Out2(FORWARD_Out2)
+	);
+	
 	//流水线 立即数与移位选择器
-	assign aluDataIn1 = (ID_RegShift==1)? ID_RegRegOut2 : ID_RegRegOut1;
-	assign aluDataIn2 = (ID_RegAluSrc==0) ? ID_RegRegOut2:ID_RegExtOut;
+	assign aluDataIn1 = (FORWARD_Out1==2'b00) ? 
+	((ID_RegShift==1)? ID_RegRegOut2 : ID_RegRegOut1):
+	(FORWARD_Out1==2'b10) ? EX_RegAluOut : //10旁路返回ex结果值
+	(FORWARD_Out1==2'b01) ? RfDataIn : 0;//01旁路返回mem写回值
+	assign aluDataIn2 = (FORWARD_Out2==2'b00) ?
+	((ID_RegAluSrc==0) ? ID_RegRegOut2:ID_RegExtOut) :
+	(FORWARD_Out2==2'b10) ? EX_RegAluOut : //10旁路返回ex结果值
+	(FORWARD_Out2==2'b01) ? RfDataIn : 0;//01旁路返回mem写回值
 	
 //ALU实例化	
 	alu alu(.C(aluDataOut),.Zero(zero),.A(aluDataIn1),.B(aluDataIn2),.ALUOp(ID_RegAluCtrl));
@@ -119,7 +133,8 @@ wire [9:0] MEM_RegDmAddr; wire [31:0] MEM_RegDmOut;wire [31:0] MEM_RegAluOut;
 //DM实例化
 	assign dmDataAdr = EX_RegAluOut[11:2];
 	dm_4k U_dm(.dout(dmDataOut),.addr(dmDataAdr),.din(EX_RegRtOut),.DMWr(EX_RegMemW),.clk(clk),.rst(rst));
-	//MEM_WB实例化
+	
+//MEM_WB实例化
 	MEM_WB U_MEM_WB(.rst(rst),.clk(clk),.DmAddr(dmDataAdr),.DmOut(dmDataOut),.AluOut(EX_RegAluOut),
 	.Rd(EX_RegRd),.RegW(EX_RegRegW),.Mem2R(EX_RegMem2R),
 	.RegDmAddr(MEM_RegDmAddr),.RegDmOut(MEM_RegDmOut),.RegAluOut(MEM_RegAluOut),.RegRd(MEM_RegRd),.RegRegW(MEM_RegRegW),.RegMem2R(MEM_RegMem2R)
