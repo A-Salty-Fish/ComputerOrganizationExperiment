@@ -10,10 +10,10 @@ module alu (A, B, ALUOp, C, Zero);
        
    always @( A or B or ALUOp ) begin
       case ( ALUOp )
-		 5'b00000 : C = A | B;
+	     `ALUOp_NOP : C = 0;
+		 `ALUOp_OR : C = A | B;
          `ALUOp_SUBU : C = A - B;
 		 `ALUOp_ADD : C = A + B;
-		 `ALUOp_OR : C = A | B;
 		 `ALUOp_SUB : C = A + ~B + 1;
 		 `ALUOp_SLT : begin
 		 if (A[31]==B[31]) C = A < B ? 1 : 0;
@@ -25,7 +25,6 @@ module alu (A, B, ALUOp, C, Zero);
 		 `ALUOp_SRA : C[31:0] =  ( { {31{A[31]}}, 1'b0 } << (~B[4:0]) ) | ( A >> B[4:0] ) ;
 		 `ALUOp_AND : C = A & B;
          default: C = B ;
-		// `ALUOp_NOP : C = A;
 		// `ALUOp_ADDU: C = A + B;
 		// `ALUOp_ADD : C = A + B;
 		// `ALUOp_SUBU: C = A - B;

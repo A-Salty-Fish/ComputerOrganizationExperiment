@@ -15,8 +15,6 @@ module PcUnit(PC,PcReSet,PcSel,Clk,Address);
 	begin
 		if(PcReSet == 1)
 			PC <= 32'h0000_3000;
-			
-		PC = PC+4;
 	  if(PcSel == 2'b01)
 				begin
 					for(i=0;i<30;i=i+1)
@@ -29,6 +27,8 @@ module PcUnit(PC,PcReSet,PcSel,Clk,Address);
 				end
 		else if (PcSel == 2'b10)
 			PC=Address;
+		else
+			PC = PC+4;
 	end
 endmodule
 	
